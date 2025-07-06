@@ -205,12 +205,8 @@ public class PointSelectChargeServiceTest {
     private void mockUserPoint(Long userId, long chargeAmount, boolean old, long cursor){
         Long now = System.currentTimeMillis();
 
-        UserPoint userPoint;
-        if(old){
-            userPoint = new UserPoint (userId, 0L, now - 10);
-        }else{
-            userPoint = UserPoint.empty(userId);
-        }
+        UserPoint userPoint = old ? new UserPoint (userId, 0L, now - 10) : UserPoint.empty(userId);
+
         given(userPointTable.selectById(userId)).willReturn(userPoint);
 
         UserPoint newUserPoint = new UserPoint(userId, chargeAmount, System.currentTimeMillis());
