@@ -12,17 +12,28 @@ public class PointService {
     private final UserPointTable  userPointTable;
 
     public UserPoint getPoint(Long id) {
-        return userPointTable.selectById(id);
+        Long currentTimeMills =  System.currentTimeMillis();
+        UserPoint userPoint = userPointTable.selectById(id);
+
+        if(currentTimeMills <= userPoint.updateMillis()){
+            userPointTable.insertOrUpdate(userPoint.id(), userPoint.point());
+        }else{
+
+        }
+
+        return userPoint;
     }
 
     public UserPoint charge(Long userId, long chargeAmount) {
-        UserPoint curUserPoint = userPointTable.selectById(userId);
 
-        // 포인트가 0L 일 경우, 그냥 0원인 유저일 수도 있고 신규 유저일 수도 있음.
+        // 1- 포인트가 0L 일 경우, 그냥 0원인 유저일 수도 있고 신규 유저일 수도 있음.
+        // 2- updateMillies를 기반으로 진행을 한다면?
+        // 3- getPoint로 통합
+        UserPoint curUserPoint = getPoint(userId);
         long newPoint = curUserPoint.point() + chargeAmount;
-        UserPoint updUserPoint = userPointTable.insertOrUpdate(userId, newPoint);
+
         PointHistory newPointHistory = pointHistoryTable.insert(userId, newPoint, TransactionType.CHARGE, System.currentTimeMillis());
 
-        return updUserPoint;
+        return userPointTable.insertOrUpdate(userId, newPoint);
     }
 }
