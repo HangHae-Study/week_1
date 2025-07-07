@@ -63,7 +63,8 @@
 - 아래 코드에서는 위 과정에서 수정한 서비스 코드인데,, 두 개 의 함수에서 selectById를 호출하고 있었고, 공통으로 신규/기존 등록 유저를 묶는게 테스트에서도 훨씬 나을 것 같음..
 
 
-- 유저에 대한 getPoint 함수에서, 없다면 신규로 유저 테이블에 값을 넣어주고, 있다면 안 넣어주면 되니 다른 함수에서 계속해서 유저 구분을 할 필요가 없을테니,, 
+- 유저에 대한 getPoint 함수에서, 없다면 신규로 유저 테이블에 값을 넣어주고, 있다면 안 넣어주면 되니 다른 함수에서 계속해서 유저 구분을 할 필요가 없을테니,,
+- Before
 ```
     public UserPoint getPoint(Long id) {
         return userPointTable.selectById(id);
@@ -87,6 +88,34 @@
         }
 
         return updUserPoint;
+    }
+```
+- After
+```
+    public UserPoint getPoint(Long id) {
+        Long currentTimeMills =  System.currentTimeMillis();
+        UserPoint userPoint = userPointTable.selectById(id);
+
+        if(currentTimeMills <= userPoint.updateMillis()){
+            userPointTable.insertOrUpdate(userPoint.id(), userPoint.point());
+        }else{
+
+        }
+
+        return userPoint;
+    }
+
+    public UserPoint charge(Long userId, long chargeAmount) {
+
+        // 1- 포인트가 0L 일 경우, 그냥 0원인 유저일 수도 있고 신규 유저일 수도 있음.
+        // 2- updateMillies를 기반으로 진행을 한다면?
+        // 3- getPoint로 통합
+        UserPoint curUserPoint = getPoint(userId);
+        long newPoint = curUserPoint.point() + chargeAmount;
+
+        PointHistory newPointHistory = pointHistoryTable.insert(userId, newPoint, TransactionType.CHARGE, System.currentTimeMillis());
+
+        return userPointTable.insertOrUpdate(userId, newPoint);
     }
 ```
 

@@ -32,8 +32,23 @@ public class PointService {
         UserPoint curUserPoint = getPoint(userId);
         long newPoint = curUserPoint.point() + chargeAmount;
 
+        UserPoint updatedUserPoint = userPointTable.insertOrUpdate(userId, newPoint);
         PointHistory newPointHistory = pointHistoryTable.insert(userId, newPoint, TransactionType.CHARGE, System.currentTimeMillis());
 
-        return userPointTable.insertOrUpdate(userId, newPoint);
+        return updatedUserPoint;
+    }
+
+    public UserPoint use(Long userId, long useAmount) {
+        UserPoint curUserPoint = getPoint(userId);
+        long newPoint = curUserPoint.point() - useAmount;
+
+        if(curUserPoint.point() == 0 || newPoint < 0){
+            throw new IllegalStateException("잔여 포인트가 부족합니다");
+        }
+
+        UserPoint updatedUserPoint = userPointTable.insertOrUpdate(userId, newPoint);
+        PointHistory newPointHistory =pointHistoryTable.insert(userId, newPoint, TransactionType.USE, System.currentTimeMillis());
+
+        return  updatedUserPoint;
     }
 }

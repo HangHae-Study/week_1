@@ -45,3 +45,64 @@
 2. 실패했을 때는 어떤 값을 응답해주고, 로직을 이어나갈 수 있을지 고민해볼 수 있을 것 같다.
     - 실패했을 때는 어떻게 다음 로직을 처리할 수 있을까?
 
+---
+
+### 이전 조회/충전에서는 화이트박스를 하였으니, 이번에는 블랙박스로 작성해보기..
+
+- 외부의 서비스인 경우
+    - Fake 객체를 구현하기
+- 내부의 서비스인 경우
+  - 비즈니스 외적인 부수효과가 존재하는 경우: Dummy 객체를 사용하기
+  - 데이터 확보가 어려운 경우: 모의 객체 프레임워크를 통해 Stub 사용하기
+  - 그 외 대부분의 경우: 실제 객체를 사용하기
+
+*** PointService의 내부동작은 모르고 테스트 코드 작성을 하되,
+PointSErvice가 의존하는 외부 객체를 fake로 대체해주기.
+
+*** 테스트 환경에서는 직접 의존 객체를 통제해줘야하는가?
+
+---
+
+### 0원 일때, 포인트 사용시 예외 처리해주기
+
+#### RED
+```
+    @Test
+    void T1_유저의_포인트가_0일때_사용할수없다(){
+        //given
+        Long userId = 1L;
+        long useAmount = 10L;
+        UserPoint currUserPoint = UserPoint.empty(userId);
+
+        given(userPointTable.selectById(userId)).willReturn(currUserPoint);
+
+        // when&then
+        assertThatThrownBy(() ->
+                pointService.use(userId, useAmount)
+        ).isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("잔여 포인트가 부족합니다");
+    }
+```
+
+`error: cannot find symbol pointService.use(userId, useAmount)`
+
+#### green
+```
+public UserPoint use(Long userId, long useAmount) {
+        UserPoint curUserPoint = getPoint(userId);
+        long newPoint = curUserPoint.point() - useAmount;
+
+        if(curUserPoint.point() == 0 || newPoint < 0){
+            throw new IllegalStateException("잔여 포인트가 부족합니다");
+        }
+
+        UserPoint updatedUserPoint = userPointTable.insertOrUpdate(userId, newPoint);
+        PointHistory newPointHistory =pointHistoryTable.insert(userId, newPoint, TransactionType.USE, System.currentTimeMillis());
+
+        return  updatedUserPoint;
+    }
+```
+
+코드 작성 시, 예외처리를 통해 올바르지 않은 사용에 대한 분기 처리의 다음 단계를 고려해보기
+
+![img.png](img.png)
