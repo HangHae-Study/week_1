@@ -5,6 +5,9 @@ import io.hhplus.tdd.database.UserPointTable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class PointService {
@@ -47,8 +50,20 @@ public class PointService {
         }
 
         UserPoint updatedUserPoint = userPointTable.insertOrUpdate(userId, newPoint);
-        PointHistory newPointHistory =pointHistoryTable.insert(userId, newPoint, TransactionType.USE, System.currentTimeMillis());
+        PointHistory newPointHistory = pointHistoryTable.insert(userId, newPoint, TransactionType.USE, System.currentTimeMillis());
 
         return  updatedUserPoint;
+    }
+
+    public List<PointHistory> getHistories(Long userId) {
+        return pointHistoryTable.selectAllByUserId(userId);
+        /*
+        return List.of(
+                new PointHistory[]{
+                        new PointHistory(1L, 1L, 500L, TransactionType.CHARGE, System.currentTimeMillis()),
+                        new PointHistory(2L, 1L, 200L, TransactionType.USE, System.currentTimeMillis()),
+        });
+        */
+
     }
 }

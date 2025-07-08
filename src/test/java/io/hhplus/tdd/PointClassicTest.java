@@ -6,14 +6,16 @@ import io.hhplus.tdd.point.PointHistory;
 import io.hhplus.tdd.point.PointService;
 import io.hhplus.tdd.point.TransactionType;
 import io.hhplus.tdd.point.UserPoint;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
-public class PointUseServiceClassicTest {
+public class PointClassicTest {
 
     private UserPointTable userPointTable;
     private PointHistoryTable pointHistoryTable;
@@ -91,28 +93,58 @@ public class PointUseServiceClassicTest {
     }
 
     @Test
-    void T2_포인트가_0이거나_부족하다면_사용할_수_없다(){
+    void T3_포인트가_부족하다면_사용할_수_없다() {
         Long userId = 1L;
-        long curAmount = 20L;
-        long useAmount = 10L;
+        long curAmount = 10L;
+        long useAmount = 20L;
 
         // 사전 준비,,
         userPointTable.insertOrUpdate(1L, curAmount);
         pointHistoryTable.insert(userId, curAmount, TransactionType.CHARGE, System.currentTimeMillis());
 
         // when
-        UserPoint userPoint = pointService.use(userId, useAmount);
-        assertThat(userPoint).isNotNull();
-        assertThat(userPoint.id()).isEqualTo(userId);
-        assertThat(userPoint.point()).isEqualTo(curAmount - useAmount);
+        assertThatThrownBy(() -> pointService.use(userId, useAmount)
+        ).isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("잔여 포인트가 부족합니다");
 
         UserPoint stored = userPointTable.selectById(userId);
-        assertThat(stored.point()).isEqualTo(curAmount - useAmount);
+        assertThat(stored.point()).isEqualTo(curAmount);
 
         List<PointHistory> histories = pointHistoryTable.selectAllByUserId(userId);
-        assertThat(histories).asList().hasSize(2); // 첫 충전 내역 + 사용 내역
-        assertThat(histories.get(1).amount()).isEqualTo(useAmount);
-        assertThat(histories.get(1).type()).isEqualTo(TransactionType.USE);
+        assertThat(histories).asList().hasSize(1); // 첫 충전 내역 + 사용 내역
+        assertThat(histories.get(0).amount()).isEqualTo(curAmount);
+        assertThat(histories.get(0).type()).isEqualTo(TransactionType.CHARGE);
+    }
+
+
+    @Test
+    void T4_포인트_충전_사용_후_포인트_내역을_조회한다(){
+        Long userId = 1L;
+        long chargeAmount = 500L;
+        long useAmount = 200L;
+
+        UserPoint chargeUser = pointService.charge(userId, chargeAmount);
+
+        Assertions.assertThat(chargeUser).isNotNull();
+        Assertions.assertThat(chargeUser.point()).isEqualTo(chargeAmount);
+
+        UserPoint useUser = pointService.use(userId, useAmount);
+
+        Assertions.assertThat(useUser).isNotNull();
+        Assertions.assertThat(useUser.point()).isEqualTo(chargeAmount - useAmount);
+
+        List<PointHistory> histories = pointService.getHistories(userId);
+
+        long sum = histories.stream()
+                .mapToLong(h-> {
+                    if (h.type() == TransactionType.CHARGE) {
+                        return h.amount();
+                    } else {
+                        return -h.amount();
+                    }
+                }).sum();
+
+        Assertions.assertThat(sum).isEqualTo(chargeAmount - useAmount);
     }
 
 }
