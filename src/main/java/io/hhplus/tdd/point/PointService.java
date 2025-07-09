@@ -36,7 +36,7 @@ public class PointService {
         long newPoint = curUserPoint.point() + chargeAmount;
 
         UserPoint updatedUserPoint = userPointTable.insertOrUpdate(userId, newPoint);
-        PointHistory newPointHistory = pointHistoryTable.insert(userId, newPoint, TransactionType.CHARGE, System.currentTimeMillis());
+        PointHistory newPointHistory = pointHistoryTable.insert(userId, chargeAmount, TransactionType.CHARGE, System.currentTimeMillis());
 
         return updatedUserPoint;
     }

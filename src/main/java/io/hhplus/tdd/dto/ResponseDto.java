@@ -1,4 +1,4 @@
-package io.hhplus.tdd;
+package io.hhplus.tdd.dto;
 
 
 public class ResponseDto<T> {
