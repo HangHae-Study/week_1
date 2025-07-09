@@ -135,6 +135,7 @@ public class PointClassicTest {
 
         List<PointHistory> histories = pointService.getHistories(userId);
 
+        assertThat(histories).asList().hasSize(2);
         long sum = histories.stream()
                 .mapToLong(h-> {
                     if (h.type() == TransactionType.CHARGE) {
@@ -145,6 +146,15 @@ public class PointClassicTest {
                 }).sum();
 
         Assertions.assertThat(sum).isEqualTo(chargeAmount - useAmount);
+    }
+
+    @Test
+    void T5_포인트기록_조회시_충전하지_않은_유저는_포인트_기록이_없다(){
+        Long userId = 1L;
+
+        List<PointHistory> histories = pointHistoryTable.selectAllByUserId(userId);
+
+        assertThat(histories).asList().hasSize(0);
     }
 
 }
