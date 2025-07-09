@@ -56,6 +56,8 @@ public class PointService {
     }
 
     public List<PointHistory> getHistories(Long userId) {
+        getPoint(userId); // <- 마음에 안드네
+
         return pointHistoryTable.selectAllByUserId(userId);
         /*
         return List.of(
