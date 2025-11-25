@@ -4,6 +4,8 @@ import io.hhplus.tdd.point.UserPoint;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface PointTableInterface {
+public interface UserPointRepository {
     public UserPoint selectById(long id);
+
+    public UserPoint insertOrUpdate(long id, long amount);
 }

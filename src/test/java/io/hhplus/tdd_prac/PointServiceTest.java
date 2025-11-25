@@ -1,10 +1,9 @@
 package io.hhplus.tdd_prac;
 
 import io.hhplus.tdd.database.PointHistoryTable;
-import io.hhplus.tdd.database.UserPointTable;
 import io.hhplus.tdd.point.UserPoint;
 import io.hhplus.tdd.point2.PointService2;
-import io.hhplus.tdd.point2.PointTableInterface;
+import io.hhplus.tdd.point2.UserPointRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -24,7 +23,7 @@ public class PointServiceTest {
     private PointHistoryTable pointHistoryTable;
 
     @Mock
-    private PointTableInterface userPointTable;
+    private UserPointRepository userPointTable;
 
     @Test
     public void TEST_01_유저를_조회한다(){
