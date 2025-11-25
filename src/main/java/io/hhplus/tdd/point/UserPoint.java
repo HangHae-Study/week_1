@@ -10,12 +10,16 @@ public record UserPoint(
         return new UserPoint(id, 0, System.currentTimeMillis());
     }
 
-    public UserPoint pointCharge(long point){
+    public long charge(long amount){
+        if(amount <= 0){
+            throw new RuntimeException("Charge Should Be Positive");
+        }
 
-        return new UserPoint(
-                this.id,
-                this.point + point,
-                System.currentTimeMillis());
+        if(amount >= 1000000L){
+            throw new RuntimeException("Charge Should Be Less Then a Million");
+        }
+
+        return this.point() + amount;
     }
 
     public UserPoint pointPay(long point){
